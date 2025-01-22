@@ -133,22 +133,29 @@ const modify = (req, res) => {
 
 // callback per destroy
 const destroy = (req, res) => {
-  // Convertiamo la stringa in numero
-  const ricettaID = parseInt(req.params.id, 10);
+  // Converte l'id in numero intero
+  const url_ID = parseInt(req.params.id);
 
-  // Settiamo variabile appoggio
-  let indexToDelete = -1;
+  // Facciamo la query che seleziona un solo elemento in base all'id
+  const sql = "DELETE FROM posts WHERE id = ?";
 
-  // A noi serve indice array dell'oggetto da cancellare
-  arrayRicette.forEach((currObject, currIndex) => {
-    if (currObject.id === ricettaID) indexToDelete = currIndex;
+  // Invio la query tramite il metodo query e gestisco cosa succede con una callback interna al metodo
+  connection.query(sql, [url_ID], (err, response) => {
+    if (err) {
+      return res.status(500).json({ message: "Errore interno al server" });
+    } else if (response.length === 0) {
+      return res.status(404).json({
+        message: "Post non trovato",
+      });
+    } else {
+      return res
+        .status(200)
+        .json({
+          status: "success",
+          data: `Post con id: ${url_ID} cancellato da database`,
+        });
+    }
   });
-
-  // Cancello un determinato elemento dall'array di oggetti
-  arrayRicette.splice(indexToDelete, 1);
-
-  // Mostriamo l'array dopo aver rimosso un elemento
-  res.send(arrayRicette);
 };
 
 module.exports = {
