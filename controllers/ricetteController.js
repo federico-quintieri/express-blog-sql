@@ -1,32 +1,44 @@
+const connection = require("../db");
 
 // callback per index
 const index = (req, res) => {
-  // Prendiamo la query string dall'URL
-  const queryObject = req.query;
-  const chiaveTags = queryObject.tags?.toLowerCase(); // Usa l'optional chaining per evitare errori se `tags` è undefined
+  // Creo query da mandare al Database
+  const sql = "SELECT * FROM posts";
 
-  // Inizializziamo le ricette da inviare con tutte le ricette
-  let ricetteDaInviare = arrayRicette;
-
-  // Applichiamo il filtro solo se `tags` è presente
-  if (chiaveTags) {
-    ricetteDaInviare = arrayRicette.filter(
-      (curRicetta) => curRicetta.tags.toLowerCase() === chiaveTags
-    );
-  }
-
-  // Mostriamo tutto l'array di ricette (filtrate o meno)
-  res.json(ricetteDaInviare);
+  // Invio la query tramite il metodo query e gestisco cosa succede con una callback interna al metodo
+  connection.query(sql, (err, response) => {
+    if (err) {
+      return res.status(500).json({ message: "Errore interno al server" });
+    } else if (response.length === 0) {
+      return res.status(404).json({
+        message: "Post non trovato",
+      });
+    } else {
+      return res.status(200).json({ status: "success", data: response });
+    }
+  });
 };
 
 // callback per show
 const show = (req, res) => {
   // Converte l'id in numero intero
-  const ricettaID = parseInt(req.params.id);
+  const url_ID = parseInt(req.params.id);
 
-  const elemento = arrayRicette.find((currItem) => currItem.id === ricettaID);
+  // Facciamo la query che seleziona un solo elemento in base all'id
+  const sql = "SELECT  * FROM posts WHERE id = ?";
 
-  res.json(elemento);
+  // Invio la query tramite il metodo query e gestisco cosa succede con una callback interna al metodo
+  connection.query(sql, [url_ID], (err, response) => {
+    if (err) {
+      return res.status(500).json({ message: "Errore interno al server" });
+    } else if (response.length === 0) {
+      return res.status(404).json({
+        message: "Post non trovato",
+      });
+    } else {
+      return res.status(200).json({ status: "success", data: response[0] });
+    }
+  });
 };
 
 // callback per store
